@@ -71,7 +71,7 @@ static void stat_to_dir(struct stat *fs) {
 
   if(!(buf_dir->flags & (FF_OTHFS|FF_EXL))) {
     buf_dir->size = fs->st_blocks * S_BLKSIZE;
-    buf_dir->asize = fs->st_size;
+    buf_dir->asize = S_ISDIR(fs->st_mode) ? 0 : fs->st_size;
   }
 
   buf_ext->mode  = fs->st_mode;

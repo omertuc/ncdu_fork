@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
   Shell support: Copyright (c) 2014 Thomas Jarosch
 
   Permission is hereby granted, free of charge, to any person obtaining
@@ -35,7 +35,7 @@
 #include <sys/wait.h>
 
 void shell_draw() {
-  char *full_path;
+  const char *full_path;
   int res;
 
   /* suspend ncurses mode */
@@ -52,7 +52,7 @@ void shell_draw() {
            "Press any key to continue.",
            full_path, res);
   } else {
-    char *shell = getenv("NCDU_SHELL");
+    const char *shell = getenv("NCDU_SHELL");
     if (shell == NULL) {
       shell = getenv("SHELL");
       if (shell == NULL)

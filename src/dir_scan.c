@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -34,6 +34,15 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#if HAVE_SYS_ATTR_H && HAVE_GETATTRLIST && HAVE_DECL_ATTR_CMNEXT_NOFIRMLINKPATH
+#include <sys/attr.h>
+#endif
+
+#if HAVE_LINUX_MAGIC_H && HAVE_SYS_STATFS_H && HAVE_STATFS
+#include <sys/statfs.h>
+#include <linux/magic.h>
+#endif
+
 
 /* set S_BLKSIZE if not defined already in sys/stat.h */
 #ifndef S_BLKSIZE
@@ -50,6 +59,54 @@ static struct dir    *buf_dir;
 static struct dir_ext buf_ext[1];
 
 
+#if HAVE_LINUX_MAGIC_H && HAVE_SYS_STATFS_H && HAVE_STATFS
+int exclude_kernfs; /* Exclude Linux pseudo filesystems */
+
+static int is_kernfs(unsigned long type) {
+  if(
+#ifdef BINFMTFS_MAGIC
+     type == BINFMTFS_MAGIC ||
+#endif
+#ifdef BPF_FS_MAGIC
+     type == BPF_FS_MAGIC ||
+#endif
+#ifdef CGROUP_SUPER_MAGIC
+     type == CGROUP_SUPER_MAGIC ||
+#endif
+#ifdef CGROUP2_SUPER_MAGIC
+     type == CGROUP2_SUPER_MAGIC||
+#endif
+#ifdef DEBUGFS_MAGIC
+     type == DEBUGFS_MAGIC ||
+#endif
+#ifdef DEVPTS_SUPER_MAGIC
+     type == DEVPTS_SUPER_MAGIC ||
+#endif
+#ifdef PROC_SUPER_MAGIC
+     type == PROC_SUPER_MAGIC ||
+#endif
+#ifdef PSTOREFS_MAGIC
+     type == PSTOREFS_MAGIC ||
+#endif
+#ifdef SECURITYFS_MAGIC
+     type == SECURITYFS_MAGIC ||
+#endif
+#ifdef SELINUX_MAGIC
+     type == SELINUX_MAGIC ||
+#endif
+#ifdef SYSFS_MAGIC
+     type == SYSFS_MAGIC ||
+#endif
+#ifdef TRACEFS_MAGIC
+     type == TRACEFS_MAGIC ||
+#endif
+     0
+    )
+    return 1;
+
+  return 0;
+}
+#endif
 
 /* Populates the buf_dir and buf_ext with information from the stat struct.
  * Sets everything necessary for output_dir.item() except FF_ERR and FF_EXL. */
@@ -69,7 +126,7 @@ static void stat_to_dir(struct stat *fs) {
   if(dir_scan_smfs && curdev != buf_dir->dev)
     buf_dir->flags |= FF_OTHFS;
 
-  if(!(buf_dir->flags & (FF_OTHFS|FF_EXL))) {
+  if(!(buf_dir->flags & (FF_OTHFS|FF_EXL|FF_KERNFS))) {
     buf_dir->size = fs->st_blocks * S_BLKSIZE;
     buf_dir->asize = S_ISDIR(fs->st_mode) ? 0 : fs->st_size;
   }
@@ -92,8 +149,8 @@ static char *dir_read(int *err) {
   DIR *dir;
   struct dirent *item;
   char *buf = NULL;
-  int buflen = 512;
-  int off = 0;
+  size_t buflen = 512;
+  size_t off = 0;
 
   if((dir = opendir(".")) == NULL) {
     *err = 1;
@@ -106,7 +163,7 @@ static char *dir_read(int *err) {
   while((item = readdir(dir)) != NULL) {
     if(item->d_name[0] == '.' && (item->d_name[1] == 0 || (item->d_name[1] == '.' && item->d_name[2] == 0)))
       continue;
-    int req = off+3+strlen(item->d_name);
+    size_t req = off+3+strlen(item->d_name);
     if(req > buflen) {
       buflen = req < buflen*2 ? buflen*2 : req;
       buf = xrealloc(buf, buflen);
@@ -204,6 +261,36 @@ static int dir_scan_item(const char *name) {
     dir_setlasterr(dir_curpath);
   }
 
+#if HAVE_LINUX_MAGIC_H && HAVE_SYS_STATFS_H && HAVE_STATFS
+  if(exclude_kernfs && !(buf_dir->flags & (FF_ERR|FF_EXL)) && S_ISDIR(st.st_mode)) {
+    struct statfs fst;
+    if(statfs(name, &fst)) {
+      buf_dir->flags |= FF_ERR;
+      dir_setlasterr(dir_curpath);
+    } else if(is_kernfs(fst.f_type))
+      buf_dir->flags |= FF_KERNFS;
+  }
+#endif
+
+#if HAVE_SYS_ATTR_H && HAVE_GETATTRLIST && HAVE_DECL_ATTR_CMNEXT_NOFIRMLINKPATH
+  if(!follow_firmlinks) {
+    struct attrlist list = {
+      .bitmapcount = ATTR_BIT_MAP_COUNT,
+      .forkattr = ATTR_CMNEXT_NOFIRMLINKPATH,
+    };
+    struct {
+      uint32_t length;
+      attrreference_t reference;
+      char extra[PATH_MAX];
+    } __attribute__((aligned(4), packed)) attributes;
+    if (getattrlist(name, &list, &attributes, sizeof(attributes), FSOPT_ATTR_CMN_EXTENDED) == -1) {
+      buf_dir->flags |= FF_ERR;
+      dir_setlasterr(dir_curpath);
+    } else if (strcmp(dir_curpath, (char *)&attributes.reference + attributes.reference.attr_dataoffset))
+      buf_dir->flags |= FF_FRMLNK;
+  }
+#endif
+
   if(!(buf_dir->flags & (FF_ERR|FF_EXL))) {
     if(follow_symlinks && S_ISLNK(st.st_mode) && !stat(name, &stl) && !S_ISDIR(stl.st_mode))
       stat_to_dir(&stl);
@@ -211,14 +298,14 @@ static int dir_scan_item(const char *name) {
       stat_to_dir(&st);
   }
 
-  if(cachedir_tags && (buf_dir->flags & FF_DIR) && !(buf_dir->flags & (FF_ERR|FF_EXL|FF_OTHFS)))
+  if(cachedir_tags && (buf_dir->flags & FF_DIR) && !(buf_dir->flags & (FF_ERR|FF_EXL|FF_OTHFS|FF_KERNFS|FF_FRMLNK)))
     if(has_cachedir_tag(name)) {
       buf_dir->flags |= FF_EXL;
       buf_dir->size = buf_dir->asize = 0;
     }
 
   /* Recurse into the dir or output the item */
-  if(buf_dir->flags & FF_DIR && !(buf_dir->flags & (FF_ERR|FF_EXL|FF_OTHFS)))
+  if(buf_dir->flags & FF_DIR && !(buf_dir->flags & (FF_ERR|FF_EXL|FF_OTHFS|FF_KERNFS|FF_FRMLNK)))
     fail = dir_scan_recurse(name);
   else if(buf_dir->flags & FF_DIR) {
     if(dir_output.item(buf_dir, name, buf_ext) || dir_output.item(NULL, 0, NULL)) {
@@ -255,7 +342,7 @@ static int dir_walk(char *dir) {
 }
 
 
-static int process() {
+static int process(void) {
   char *path;
   char *dir;
   int fail = 0;

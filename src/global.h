@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -42,15 +42,17 @@
 #endif
 
 /* File Flags (struct dir -> flags) */
-#define FF_DIR    0x01
-#define FF_FILE   0x02
-#define FF_ERR    0x04 /* error while reading this item */
-#define FF_OTHFS  0x08 /* excluded because it was another filesystem */
-#define FF_EXL    0x10 /* excluded using exlude patterns */
-#define FF_SERR   0x20 /* error in subdirectory */
-#define FF_HLNKC  0x40 /* hard link candidate (file with st_nlink > 1) */
-#define FF_BSEL   0x80 /* selected */
-#define FF_EXT   0x100 /* extended struct available */
+#define FF_DIR     0x01
+#define FF_FILE    0x02
+#define FF_ERR     0x04 /* error while reading this item */
+#define FF_OTHFS   0x08 /* excluded because it was another filesystem */
+#define FF_EXL     0x10 /* excluded using exclude patterns */
+#define FF_SERR    0x20 /* error in subdirectory */
+#define FF_HLNKC   0x40 /* hard link candidate (file with st_nlink > 1) */
+#define FF_BSEL    0x80 /* selected */
+#define FF_EXT    0x100 /* extended struct available */
+#define FF_KERNFS 0x200 /* excluded because it was a Linux pseudo filesystem */
+#define FF_FRMLNK 0x400 /* excluded because it was a firmlink */
 
 /* Program states */
 #define ST_CALC   0
@@ -105,12 +107,14 @@ extern int confirm_quit;
 extern int extended_info;
 /* flag whether we want to follow symlinks */
 extern int follow_symlinks;
+/* flag whether we want to follow firmlinks */
+extern int follow_firmlinks;
 
 /* handle input from keyboard and update display */
 int input_handle(int);
 
 /* de-initialize ncurses */
-void close_nc();
+void close_nc(void);
 
 
 /* import all other global functions and variables */

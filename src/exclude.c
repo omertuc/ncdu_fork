@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -31,7 +31,7 @@
 #include <fnmatch.h>
 
 
-struct exclude {
+static struct exclude {
   char *pattern;
   struct exclude *next;
 } *excludes = NULL;
@@ -100,7 +100,7 @@ void exclude_clear() {
 }
 
 
-/* 
+/*
  * Exclusion of directories that contain only cached information.
  * See http://www.brynosaurus.com/cachedir/
  */
@@ -111,8 +111,7 @@ int has_cachedir_tag(const char *name) {
   static int path_l = 1024;
   static char *path = NULL;
   int l;
-  const size_t signature_l = sizeof CACHEDIR_TAG_SIGNATURE - 1;
-  char buf[signature_l];
+  char buf[sizeof CACHEDIR_TAG_SIGNATURE - 1];
   FILE *f;
   int match = 0;
 
@@ -131,8 +130,8 @@ int has_cachedir_tag(const char *name) {
   f = fopen(path, "rb");
 
   if(f != NULL) {
-    match = ((fread(buf, 1, signature_l, f) == signature_l) &&
-                !memcmp(buf, CACHEDIR_TAG_SIGNATURE, signature_l));
+    match = ((fread(buf, 1, sizeof buf, f) == sizeof buf) &&
+                !memcmp(buf, CACHEDIR_TAG_SIGNATURE, sizeof buf));
     fclose(f);
   }
   return match;

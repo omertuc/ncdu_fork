@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -34,7 +34,7 @@
 static FILE *stream;
 
 /* Stack of device IDs, also used to keep track of the level of nesting */
-struct stack {
+static struct stack {
   uint64_t *list;
   int size, top;
 } stack;
@@ -116,12 +116,16 @@ static void output_info(struct dir *d, const char *name, struct dir_ext *e) {
   if(d->flags & FF_ERR)
     fputs(",\"read_error\":true", stream);
   /* excluded/error'd files are "unknown" with respect to the "notreg" field. */
-  if(!(d->flags & (FF_DIR|FF_FILE|FF_ERR|FF_EXL|FF_OTHFS)))
+  if(!(d->flags & (FF_DIR|FF_FILE|FF_ERR|FF_EXL|FF_OTHFS|FF_KERNFS|FF_FRMLNK)))
     fputs(",\"notreg\":true", stream);
   if(d->flags & FF_EXL)
     fputs(",\"excluded\":\"pattern\"", stream);
   else if(d->flags & FF_OTHFS)
     fputs(",\"excluded\":\"othfs\"", stream);
+  else if(d->flags & FF_KERNFS)
+    fputs(",\"excluded\":\"kernfs\"", stream);
+  else if(d->flags & FF_FRMLNK)
+    fputs(",\"excluded\":\"frmlnk\"", stream);
 
   fputc('}', stream);
 }

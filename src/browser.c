@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -32,7 +32,7 @@
 
 
 static int graph = 1, show_as = 0, info_show = 0, info_page = 0, info_start = 0, show_items = 0, show_mtime = 0;
-static char *message = NULL;
+static const char *message = NULL;
 
 
 
@@ -118,6 +118,8 @@ static void browse_draw_flag(struct dir *n, int *x) {
         n->flags & FF_ERR ? '!' :
        n->flags & FF_SERR ? '.' :
       n->flags & FF_OTHFS ? '>' :
+     n->flags & FF_KERNFS ? '^' :
+     n->flags & FF_FRMLNK ? 'F' :
       n->flags & FF_HLNKC ? 'H' :
      !(n->flags & FF_FILE
     || n->flags & FF_DIR) ? '@' :
@@ -256,7 +258,7 @@ static void browse_draw_item(struct dir *n, int row) {
 
 void browse_draw() {
   struct dir *t;
-  char *tmp;
+  const char *tmp;
   int selected = 0, i;
 
   erase();

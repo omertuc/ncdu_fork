@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -60,7 +60,7 @@ enum ui_coltype {
 /* Color & attribute manipulation */
 extern int uic_theme;
 
-void uic_init();
+void uic_init(void);
 void uic_set(enum ui_coltype);
 
 
@@ -106,10 +106,10 @@ int ncresize(int, int);
 void nccreate(int, int, const char *);
 
 /* printf something somewhere in the last created window */
-void ncprint(int, int, char *, ...);
+void ncprint(int, int, const char *, ...);
 
 /* Add a "tab" to a window */
-void nctab(int, int, int, char *);
+void nctab(int, int, int, const char *);
 
 /* same as the w* functions of ncurses, with a color */
 #define ncaddstr(r, c, s) mvaddstr(subwinr+(r), subwinc+(c), s)
@@ -129,7 +129,7 @@ void nctab(int, int, int, char *);
 char *cropstr(const char *, int);
 
 /* Converts the given size in bytes into a float (0 <= f < 1000) and a unit string */
-float formatsize(int64_t, char **);
+float formatsize(int64_t, const char **);
 
 /* print size in the form of xxx.x XB */
 void printsize(enum ui_coltype, int64_t);
@@ -141,14 +141,14 @@ char *fullsize(int64_t);
 char *fmtmode(unsigned short);
 
 /* read locale information from the environment */
-void read_locale();
+void read_locale(void);
 
 /* recursively free()s a directory tree */
 void freedir(struct dir *);
 
 /* generates full path from a dir item,
    returned pointer will be overwritten with a subsequent call */
-char *getpath(struct dir *);
+const char *getpath(struct dir *);
 
 /* returns the root element of the given dir struct */
 struct dir *getroot(struct dir *);
@@ -187,7 +187,7 @@ void addparentstats(struct dir *, int64_t, int64_t, uint64_t, int);
 
 
 /* Malloc wrappers that exit on OOM */
-void *xmalloc();
+void *xmalloc(size_t);
 void *xcalloc(size_t, size_t);
 void *xrealloc(void *, size_t);
 

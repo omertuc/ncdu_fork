@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -61,7 +61,7 @@ struct dir_output {
    *
    * The *item struct has the following fields set when item() is called:
    *   size, asize, ino, dev, flags (only DIR,FILE,ERR,OTHFS,EXL,HLNKC).
-   * All other fields/flags should be initialzed to NULL or 0.
+   * All other fields/flags should be initialized to NULL or 0.
    * The name and dir_ext fields are given separately.
    * All pointers may be overwritten or freed in subsequent calls, so this
    * function should make a copy if necessary.
@@ -103,7 +103,7 @@ int dir_export_init(const char *fn);
 
 
 /* Function set by input code. Returns dir_output.final(). */
-int (*dir_process)();
+extern int (*dir_process)(void);
 
 /* Scanning a live directory */
 extern int dir_scan_smfs;
@@ -113,6 +113,10 @@ void dir_scan_init(const char *path);
 extern int dir_import_active;
 int dir_import_init(const char *fn);
 
+#if HAVE_LINUX_MAGIC_H && HAVE_SYS_STATFS_H && HAVE_STATFS
+extern int exclude_kernfs;
+#endif
+
 
 /* The currently configured output functions. */
 extern struct dir_output dir_output;
@@ -121,7 +125,7 @@ extern struct dir_output dir_output;
 extern char *dir_curpath;
 void dir_curpath_set(const char *);
 void dir_curpath_enter(const char *);
-void dir_curpath_leave();
+void dir_curpath_leave(void);
 
 /* Sets the path where the last error occurred, or reset on NULL. */
 void dir_setlasterr(const char *);
@@ -132,6 +136,6 @@ void dir_seterr(const char *, ...);
 
 extern int dir_ui;
 int dir_key(int);
-void dir_draw();
+void dir_draw(void);
 
 #endif

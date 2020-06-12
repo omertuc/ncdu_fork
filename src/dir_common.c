@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -31,6 +31,7 @@
 #include <stdarg.h>
 
 
+int (*dir_process)(void);
 char *dir_curpath;   /* Full path of the last seen item. */
 struct dir_output dir_output;
 char *dir_fatalerr; /* Error message on a fatal error. (NULL if there was no fatal error) */
@@ -106,12 +107,12 @@ void dir_seterr(const char *fmt, ...) {
 }
 
 
-static void draw_progress() {
+static void draw_progress(void) {
   static const char scantext[] = "Scanning...";
   static const char loadtext[] = "Loading...";
   static size_t anpos = 0;
   const char *antext = dir_import_active ? loadtext : scantext;
-  char ani[16] = {};
+  char ani[16] = {0};
   size_t i;
   int width = wincols-5;
 
@@ -180,7 +181,7 @@ static void draw_error(char *cur, char *msg) {
 
 void dir_draw() {
   float f;
-  char *unit;
+  const char *unit;
 
   switch(dir_ui) {
   case 0:

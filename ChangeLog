@@ -1,3 +1,21 @@
+1.15.1 - 2020-06-10
+	- (Linux) Fix build on older Linux systems (Christian Göttsche)
+	- (MacOS) Revert "Exclude firmlinks by default" behavior (until we have a better solution)
+	- (MacOS) Add --exclude-firmlinks option to opt-in to the above behavior
+
+1.15 - 2020-05-30
+	- (Linux) Add --exclude-kernfs option to exclude pseudo filesystems (Christian Göttsche)
+	- (MacOS) Exclude firmlinks by default (Saagar Jha)
+	- (MacOS) Add --follow-firmlinks option to follow firmlinks (Saagar Jha)
+	- Fix bug in calculating the apparent size of directories containing hardlinks
+	- Fix integer overflow with directories containing >2GiB worth of file names
+	- Fix yet another possible 100% CPU bug when losing terminal
+
+1.14.2 - 2020-02-10
+	- Fix compilation with GCC 10 (-fno-common)
+	- Fix minor display issue when scanning 10M+ files
+	- Slightly reduce memory usage for hard link detection
+
 1.14.1 - 2019-08-05
 	- Fix occasional early exit on OS X
 	- Fix --exclude-caches
@@ -64,7 +82,7 @@
 	- Count the size of a hard linked file once for each directory it appears in
 	- Fixed crash on browsing dirs with a small window size (#2991787)
 	- Fixed buffer overflow when some directories can't be scanned (#2981704)
-	- Fixed segfault when launched on a nonexistant directory (#3012787)
+	- Fixed segfault when launched on a nonexistent directory (#3012787)
 	- Fixed segfault when root dir only contains hidden files
 	- Improved browsing performance
 	- More intuitive multi-page browsing

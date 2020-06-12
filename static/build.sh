@@ -33,7 +33,7 @@ mkdir -p tarballs
 
 
 # "Fetch, Extract, Move"
-fem() { # base-url name targerdir extractdir 
+fem() { # base-url name targerdir extractdir
   echo "====== Fetching and extracting $1 $2"
   cd tarballs
   if [ -n "$4" ]; then
@@ -110,6 +110,7 @@ buildarch() {
   TARGET=$1
   case $TARGET in
     arm)    HOST=arm-linux-musleabi  DIR=arm-linux-musleabi ;;
+    aarch64)HOST=aarch64-linux-musl  DIR=aarch64-linux-musl ;;
     i486)   HOST=i486-linux-musl     DIR=i486-linux-musl    ;;
     x86_64) HOST=x86_64-linux-musl   DIR=x86_64-linux-musl  ;;
     *)      echo "Unknown target: $TARGET" ;;

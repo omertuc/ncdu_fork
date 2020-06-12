@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -29,7 +29,7 @@
 void exclude_add(char *);
 int  exclude_addfile(char *);
 int  exclude_match(char *);
-void exclude_clear();
+void exclude_clear(void);
 int  has_cachedir_tag(const char *name);
 
 #endif

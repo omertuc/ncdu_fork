@@ -1,6 +1,6 @@
 /* ncdu - NCurses Disk Usage
 
-  Copyright (c) 2007-2019 Yoran Heling
+  Copyright (c) 2007-2020 Yoran Heling
 
   Permission is hereby granted, free of charge, to any person obtaining
   a copy of this software and associated documentation files (the
@@ -161,7 +161,7 @@ static struct dir *dirlist_sort(struct dir *list) {
  * - makes sure one, and only one, visible item is selected
  * - updates the dirlist_(maxs|maxa) values
  * - makes sure that the FF_BSEL bits are correct */
-static void dirlist_fixup() {
+static void dirlist_fixup(void) {
   struct dir *t;
 
   /* we're going to determine the selected items from the list itself, so reset this one */
@@ -330,7 +330,7 @@ void dirlist_select(struct dir *d) {
  */
 struct dir *dirlist_top(int hint) {
   struct dir *t;
-  int i = winrows-3, visible = 0;
+  int i, visible = 0;
 
   if(hint == -2 || hint == -3)
     top = NULL;
